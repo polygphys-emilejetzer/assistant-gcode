@@ -12,6 +12,8 @@ import svg.path
 import matplotlib
 from matplotlib import pyplot
 
+import gcode
+
 # Régler l'origine
 # On assume que l'origine est au coin supérieur gauche, contre la plaque
 # sacrificielle.
@@ -52,37 +54,20 @@ def extraire_gcode(chemins: list[list[list[float]]],  # Entrée
                    # Paramètres de programme
                    z_0: float = 10,  # mm, niveau de déplacement rapide
                    vitesse_de_rotation: float = 10000,  # tr/min
-                   avance: float = 800,  # mm/min
-                   ):
-    programme = []  # Programme à écrire
-
+                   avance: float = 800):  # mm/min
     # Début du programme
     # Réglages de base
-    programme.append('G71')  # mm
-    programme.append('T1')  # Outil 1
-    programme.append(f'S{vitesse_de_rotation}')  # tr/min
-    programme.append(f'F{avance}')  # mm/min
-    programme.append('G90')  # Coordonnées absolues
+    programme = gcode.initialiser(chemins[0][0][0], chemins[0][0][0], z_0, vitesse_de_rotation, avance)
 
     for xs, ys in chemins:
-        # Déplacement hors-matière
-        programme.append('')
-        programme.append(f'G0 X{xs[0]} Y{ys[0]} Z{z_0}')
-
-        # On itère sur une série de points.
-        for x, y in zip(xs, ys):
-            # Retrait de matière
-            programme.append(f'G1 X{x} Y{y} Z0.')
-
-        programme.append(f'G0 Z{z_0}')  # Plan de déplacement sécure
+        programme += gcode.fraisage(xs[:1] + xs,
+                                    ys[:1] + ys,
+                                    [z_0] + [0.0 for i in xs] + [z_0])
 
     # Fin & arrêt du programme
-    programme.append('')
-    programme.append('M5')  # Arrêt broche
-    programme.append('M2')  # Fin de programme
-    programme.append('')
+    programme += gcode.fin()
 
-    return '\n'.join(programme)
+    return str(programme)
 
 
 def extraire_graphique(chemins: list[list[list[float]]]):
@@ -111,10 +96,10 @@ def main():
 
     extraire_graphique(chemins)
 
-    with open(f'eg/parcours {date.today()}.iso', 'w') as f:
+    with open(Path(__file__).parent / 'eg' / 'parcours {date.today()}.iso', 'w') as f:
         f.write(gcode)
 
-    pyplot.savefig(f'eg/parcours {date.today()}.svg')
+    pyplot.savefig(Path(__file__).parent / 'eg' / 'parcours {date.today()}.svg')
     pyplot.show()
 
 
