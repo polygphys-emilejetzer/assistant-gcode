@@ -9,6 +9,8 @@ from xml.etree import ElementTree as ET
 
 import svg.path
 
+import numpy as np
+
 import matplotlib
 from matplotlib import pyplot
 
@@ -43,8 +45,8 @@ def extraire_chemins(fichier_svg: Path,  # Entrée
             index = i / longueur
             point = chemin.point(index)
             x, y = point.real, point.imag
-            xs.append(x)
-            ys.append(y)
+            xs.append(x/10)
+            ys.append(y/10)
         chemins.append([xs, ys])
 
     return chemins
@@ -57,7 +59,8 @@ def extraire_gcode(chemins: list[list[list[float]]],  # Entrée
                    avance: float = 800):  # mm/min
     # Début du programme
     # Réglages de base
-    programme = gcode.initialiser(chemins[0][0][0], chemins[0][0][0], z_0, vitesse_de_rotation, avance)
+    programme = gcode.initialiser(
+        chemins[0][0][0], chemins[0][0][0], z_0, vitesse_de_rotation, avance)
 
     for xs, ys in chemins:
         programme += gcode.fraisage(xs[:1] + xs,
@@ -87,7 +90,7 @@ def main():
     fichier = input('fichier: ')
     if not fichier:
         fichier = 'eg/dessin.svg'
-    
+
     chemins = extraire_chemins(fichier)
     gcode = extraire_gcode(chemins)
 
@@ -99,7 +102,8 @@ def main():
     with open(Path(__file__).parent / 'eg' / 'parcours {date.today()}.iso', 'w') as f:
         f.write(gcode)
 
-    pyplot.savefig(Path(__file__).parent / 'eg' / 'parcours {date.today()}.svg')
+    pyplot.savefig(Path(__file__).parent / 'eg' /
+                   'parcours {date.today()}.svg')
     pyplot.show()
 
 
