@@ -26,7 +26,8 @@ def initialiser(x_0: float = 0,
 def déplacer(xs: list[float],
              ys: list[float],
              zs: list[float]):
-    programme = [f'G0 X{x} Y{y} Z{z}' for x, y, z in zip(xs, ys, zs)]
+    programme = [f'G0 X{x:.4f} Y{y:.4f} Z{z:.4f}' for x,
+                 y, z in zip(xs, ys, zs)]
     return GProgramme(programme)
 
 
