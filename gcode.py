@@ -31,7 +31,10 @@ def déplacer(xs: list[float],
     return GProgramme(programme)
 
 
-def perçage(x: float, y: float, z: float, dz: float):
+def perçage(x: float,  # Position en x (mm)
+            y: float,  # Position en y (mm)
+            z: float,  # Hauteur de déplacement (mm)
+            dz: float):  # Profondeur d'usinage
     programme = GProgramme()
     programme.append(f'G0 X{x:.4f} Y{y:.4f} Z{z:.4f}')
     programme.append(f'G0 X{x:.4f} Y{y:.4f} Z{z-dz:.4f}')
@@ -40,10 +43,13 @@ def perçage(x: float, y: float, z: float, dz: float):
     return programme
 
 
-def fraisage(xs: list[float], ys: list[float], zs: list[float]):
-    return déplacer(xs[:1], ys[:1], [zs[0]+1]) +\
+def fraisage(xs: list[float],  # Positions en x (mm)
+             ys: list[float],  # Positions en y (mm)
+             zs: list[float],  # Hauteurs d'usinage (mm)
+             dz: float = 1.0):  # Décalage de travail (mm)
+    return déplacer(xs[:1], ys[:1], [zs[0]+dz]) +\
         déplacer(xs, ys, zs) +\
-        déplacer(xs[-1:], ys[-1:], [zs[-1]+1])
+        déplacer(xs[-1:], ys[-1:], [zs[-1]+dz])
 
 
 def fin():

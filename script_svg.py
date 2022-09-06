@@ -29,8 +29,11 @@ namespace = {'svg': 'http://www.w3.org/2000/svg'}  # Pour le SVG
 
 
 def extraire_chemins(fichier_svg: Path,  # Entrée
-                     résolution: float = 0.1  # mm
-                     ):
+                     résolution: float = 0.1,  # mm
+                     paramètres: dict = None):
+    if paramètres is not None:
+        résolution = float(paramètres.get('Résolution (mm)', résolution))
+
     # Aller chercher les chemins dans le fichier SVG
     document_svg = ET.parse(fichier_svg)
     chemins_svg = [svg.path.parse_path(c.attrib['d'])
@@ -56,7 +59,19 @@ def extraire_gcode(chemins: list[list[list[float]]],  # Entrée
                    # Paramètres de programme
                    z_0: float = 10,  # mm, niveau de déplacement rapide
                    vitesse_de_rotation: float = 10000,  # tr/min
-                   avance: float = 800):  # mm/min
+                   avance: float = 800,  # mm/min
+                   paramètres: dict = None):
+    if paramètres is not None:
+        prof_usinage = float(paramètres.get('Profondeur d\'usinage (mm)', 0))
+        hauteur_rapide = float(paramètres.get(
+            'Hauteur de déplacement rapide (mm)', 0))
+        prof_brut = float(paramètres.get('Profondeur du brut (mm)', 0))
+        z_0 = hauteur_rapide + prof_brut
+        niveau_usinage = prof_brut - prof_usinage
+        vitesse_de_rotation = float(paramètres.get(
+            'Vitesse de rotation (rpm)', vitesse_de_rotation))
+        avance = float(paramètres.get('Avance (mm/min)', avance))
+
     # Début du programme
     # Réglages de base
     programme = gcode.initialiser(
@@ -65,7 +80,7 @@ def extraire_gcode(chemins: list[list[list[float]]],  # Entrée
     for xs, ys in chemins:
         programme += gcode.fraisage(xs[:1] + xs,
                                     ys[:1] + ys,
-                                    [z_0] + [0.0 for i in xs] + [z_0])
+                                    [z_0] + [niveau_usinage for i in xs] + [z_0])
 
     # Fin & arrêt du programme
     programme += gcode.fin()
